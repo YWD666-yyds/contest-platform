@@ -1,7 +1,7 @@
 /** 首页：赛事介绍 / 组别 / 赛程 / 创作方向 / 公告。 */
-import { api } from "../api.js?v=12";
-import { h, fmtTime } from "../ui.js?v=12";
-import { state, setNav } from "../app.js?v=12";
+import { api } from "../api.js?v=13";
+import { h, fmtTime } from "../ui.js?v=13";
+import { state, setNav } from "../app.js?v=13";
 
 export async function render(app) {
   setNav("首页");

@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from . import config
 from .db import init_db
-from .routers import admin, agent, auth, exam, judge, public, student
+from .routers import admin, agent, auth, exam, public, student
 
 app = FastAPI(title="人工智能应用赛项 · 市级初赛平台", docs_url=None, redoc_url=None)
 
@@ -18,7 +18,6 @@ app.include_router(public.router)
 app.include_router(student.router)
 app.include_router(agent.router)
 app.include_router(exam.router)
-app.include_router(judge.router)
 app.include_router(admin.router)
 
 STATIC_DIR = config.BASE_DIR / "static"
@@ -39,9 +38,6 @@ def health():
     return {"ok": True, "service": "contest-platform"}
 
 
-# 上传文件：开发环境由 FastAPI 直接服务；生产环境由 Nginx 服务同一目录（见 deploy/nginx-contest.conf）
-app.mount("/uploads", StaticFiles(directory=str(config.UPLOAD_DIR), check_dir=False), name="uploads")
-app.mount("/thumbs", StaticFiles(directory=str(config.THUMB_DIR), check_dir=False), name="thumbs")
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR), check_dir=False), name="static")
 
 

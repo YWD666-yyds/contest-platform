@@ -32,19 +32,3 @@ def login(client, username, password):
                     headers={"X-Requested-With": "XMLHttpRequest"})
     assert r.status_code == 200, r.text
     return r.json()
-
-
-def make_png(w, h, color=(43, 80, 226)) -> bytes:
-    import io
-    from PIL import Image
-    buf = io.BytesIO()
-    Image.new("RGB", (w, h), color).save(buf, "PNG")
-    return buf.getvalue()
-
-
-def make_jpeg(w, h, color=(200, 60, 60)) -> bytes:
-    import io
-    from PIL import Image
-    buf = io.BytesIO()
-    Image.new("RGB", (w, h), color).save(buf, "JPEG", quality=90)
-    return buf.getvalue()

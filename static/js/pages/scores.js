@@ -1,7 +1,7 @@
 /** 成绩公示页：按组别查看排名 / 凭参赛编号查询个人成绩。 */
-import { api } from "../api.js?v=12";
-import { h, $, $$, empty, fmtDur, toastErr } from "../ui.js?v=12";
-import { setNav, GROUP_NAMES } from "../app.js?v=12";
+import { api } from "../api.js?v=13";
+import { h, $, $$, empty, fmtDur, toastErr } from "../ui.js?v=13";
+import { setNav, GROUP_NAMES } from "../app.js?v=13";
 
 export async function render(app) {
   setNav("成绩公示");
@@ -55,9 +55,7 @@ export async function render(app) {
           h("div", { class: "spread" },
             h("strong", {}, `${m.name} · ${m.entry_no}`),
             h("span", { class: "badge badge-ok" }, `第 ${m.rank} 名`)),
-          group === "low"
-            ? h("p", { class: "small mt8" }, `作品：《${m.work_title || "—"}》 · 总分 ${m.total}`)
-            : h("p", { class: "small mt8" }, `得分 ${m.score} · 用时 ${fmtDur(m.duration_seconds)}`),
+          h("p", { class: "small mt8" }, `得分 ${m.score} · 用时 ${fmtDur(m.duration_seconds)}`),
         ));
       } catch (e) {
         mineBox.append(h("p", { class: "small", style: "color:var(--danger);text-align:center" }, e.message));
@@ -70,9 +68,7 @@ export async function render(app) {
   }
 
   function buildTable(group, list) {
-    const thead = group === "low"
-      ? ["名次", "参赛编号", "姓名", "学校", "作品名称", "主题契合30", "创意构思35", "设计表达20", "创作过程15", "总分"]
-      : ["名次", "参赛编号", "姓名", "学校", "年级", "得分", "用时"];
+    const thead = ["名次", "参赛编号", "姓名", "学校", "年级", "得分", "用时"];
     return h("table", { class: "tbl" },
       h("thead", {}, h("tr", {}, ...thead.map((c) => h("th", {}, c)))),
       h("tbody", {}, ...list.map((r, i) => h("tr", {},
@@ -80,13 +76,9 @@ export async function render(app) {
         h("td", { class: "nowrap" }, r.entry_no),
         h("td", { class: "nowrap" }, r.name),
         h("td", {}, r.school),
-        group === "low"
-          ? [h("td", {}, r.work_title || "—"),
-             ...["s_theme", "s_creative", "s_expression", "s_process", "total"].map((k) =>
-               h("td", { class: `num ${k === "total" ? "rank-top" : ""}` }, String(r[k] ?? "—")))]
-          : [h("td", { class: "nowrap" }, r.grade || "—"),
-             h("td", { class: "num rank-top" }, String(r.score)),
-             h("td", { class: "num" }, fmtDur(r.duration_seconds))],
+        h("td", { class: "nowrap" }, r.grade || "—"),
+        h("td", { class: "num rank-top" }, String(r.score)),
+        h("td", { class: "num" }, fmtDur(r.duration_seconds)),
       ))));
   }
 

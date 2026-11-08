@@ -1,8 +1,7 @@
 """判分与排名。
 
-- 低段组（规则 7.2）：评委四维平均分（保留两位小数），同分依次比较
   创意构思 → 主题契合 → 设计表达 → 创作过程。
-- 高段/中学组（规则 7.3、7.6）：得分高者列前；同分作答用时短者列前；
+- 小学高段组：得分高者列前；同分作答用时短者列前；
   再同分比较作答完整度。
 """
 import json
@@ -12,34 +11,6 @@ from ..db import get_db
 DIMS = ["s_theme", "s_creative", "s_expression", "s_process"]
 # 规则 7.2 同分比较优先级：创意构思 → 主题契合 → 设计表达 → 创作过程
 TIE_BREAK = ["s_creative", "s_theme", "s_expression", "s_process"]
-
-
-def low_group_ranking(conn) -> list[dict]:
-    students = conn.execute(
-        "SELECT * FROM students WHERE group_code='low' AND status='submitted' AND disqualified=0"
-    ).fetchall()
-    rows = []
-    for st in students:
-        scores = conn.execute(
-            "SELECT s_theme,s_creative,s_expression,s_process,comment,created_at FROM scores WHERE student_id=?",
-            (st["id"],),
-        ).fetchall()
-        if not scores:
-            continue  # 尚无评委评分的作品不入排名（评审中）
-        n = len(scores)
-        avg = {d: round(sum(s[d] for s in scores) / n + 1e-9, 2) for d in DIMS}
-        total = round(sum(avg.values()) + 1e-9, 2)
-        rows.append({
-            "student_id": st["id"], "entry_no": st["entry_no"], "name": st["name"],
-            "school": st["school"], "work_title": st["work_title"],
-            "judge_count": n, **avg, "total": total, "comment": scores[-1]["comment"],
-        })
-    # 同分依次比较：创意构思 → 主题契合 → 设计表达 → 创作过程 → 提交时间
-    rows.sort(key=lambda r: (-r["total"], -r["s_creative"], -r["s_theme"],
-                             -r["s_expression"], -r["s_process"], r["entry_no"]))
-    for i, r in enumerate(rows, 1):
-        r["rank"] = i
-    return rows
 
 
 def quiz_ranking(conn, group_code: str) -> list[dict]:

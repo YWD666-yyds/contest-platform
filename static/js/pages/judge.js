@@ -1,6 +1,6 @@
 /** 评审工作台（已下线）：本届评审由组委会教师线下开展，此页仅展示说明。 */
-import { h } from "../ui.js?v=12";
-import { setNav } from "../app.js?v=12";
+import { h } from "../ui.js?v=13";
+import { setNav } from "../app.js?v=13";
 
 export async function render(app) {
   setNav("");

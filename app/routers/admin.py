@@ -14,7 +14,7 @@ from ..security import (csrf_check, gen_password, hash_password, require_role,
                         verify_password)
 from ..services import importer as importer_svc
 from ..services import llm as llm_svc
-from ..services.grading import low_group_ranking, quiz_ranking
+from ..services.grading import quiz_ranking
 from ..utils import now_str
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
@@ -35,18 +35,11 @@ def overview(request: Request):
                 "SUM(CASE WHEN status='submitted' THEN 1 ELSE 0 END) AS submitted "
                 "FROM students WHERE group_code=?", (g,)
             ).fetchone()
-            graded = conn.execute(
-                "SELECT COUNT(DISTINCT sc.student_id) AS n FROM scores sc "
-                "JOIN students s ON s.id=sc.student_id WHERE s.group_code='low'",
-            ).fetchone()["n"] if g == "low" else None
-            attempts = None
-            if g != "low":
-                attempts = conn.execute(
-                    "SELECT COUNT(*) AS n FROM attempts WHERE group_code=? AND status='submitted'", (g,)
-                ).fetchone()["n"]
+            attempts = conn.execute(
+                "SELECT COUNT(*) AS n FROM attempts WHERE group_code=? AND status='submitted'", (g,)
+            ).fetchone()["n"]
             stats[g] = {"total": row["total"] or 0, "submitted": row["submitted"] or 0,
-                        "graded": graded, "attempt_submitted": attempts}
-        judges = conn.execute("SELECT COUNT(*) AS n FROM users WHERE role='judge'").fetchone()["n"]
+                        "attempt_submitted": attempts}
         ag_row = conn.execute(
             "SELECT COUNT(*) AS total, "
             "SUM(CASE WHEN status='submitted' THEN 1 ELSE 0 END) AS submitted, "
@@ -61,7 +54,7 @@ def overview(request: Request):
             "revise": ag_row["revise_cnt"] or 0,
         }
         settings = {k: get_setting(conn, k) for k in ("site", "submission", "exams", "publish", "quota", "agent_exam")}
-    return {"stats": stats, "agent_stats": agent_stats, "judges": judges, "settings": settings,
+    return {"stats": stats, "agent_stats": agent_stats, "settings": settings,
             "groups": config.GROUP_NAMES}
 
 
@@ -85,8 +78,7 @@ def students(request: Request, group: str = "", q: str = "", status: str = "", p
         total = conn.execute(f"SELECT COUNT(*) AS n FROM students s WHERE {w}", args).fetchone()["n"]
         rows = conn.execute(
             f"""SELECT s.*, a.score AS exam_score, a.status AS attempt_status,
-                       a.duration_seconds, a.suspicious_events,
-                       (SELECT COUNT(*) FROM scores sc WHERE sc.student_id=s.id) AS judge_count
+                       a.duration_seconds, a.suspicious_events
                 FROM students s LEFT JOIN attempts a ON a.student_id=s.id
                 WHERE {w} ORDER BY s.group_code, s.entry_no LIMIT ? OFFSET ?""",
             args + [size, (page - 1) * size],
@@ -99,13 +91,11 @@ def _student_row(r) -> dict:
     return {
         "id": r["id"], "entry_no": r["entry_no"], "name": r["name"], "school": r["school"],
         "grade": r["grade"], "group_code": r["group_code"], "teacher_name": r["teacher_name"],
-        "work_title": r["work_title"], "status": r["status"], "submitted_at": r["submitted_at"],
-        "edit_locked": bool(r["edit_locked"]), "disqualified": bool(r["disqualified"]),
-        "judge_count": r["judge_count"], "exam_score": r["exam_score"],
+        "status": r["status"], "submitted_at": r["submitted_at"],
+        "disqualified": bool(r["disqualified"]),
+        "exam_score": r["exam_score"],
         "attempt_status": r["attempt_status"], "duration_seconds": r["duration_seconds"],
         "suspicious_events": r["suspicious_events"],
-        "has_design": bool(r["design_image"]),
-        "process_count": len(json.loads(r["process_images"] or "[]")),
     }
 
 
@@ -192,7 +182,6 @@ def delete_student(student_id: int, request: Request):
         if not st:
             raise HTTPException(404, "学生不存在")
         conn.execute("DELETE FROM users WHERE id=?", (st["user_id"],))  # 级联删除 students/attempts
-        conn.execute("DELETE FROM scores WHERE student_id=?", (student_id,))
     return {"ok": True}
 
 
@@ -436,23 +425,13 @@ def ranking(request: Request, group: str):
     if group not in config.GROUP_NAMES:
         raise HTTPException(400, "参数错误")
     with get_db() as conn:
-        if group == "low":
-            rows = low_group_ranking(conn)
-            fields = ["rank", "student_id", "entry_no", "name", "school", "work_title",
-                      "total", "s_theme", "s_creative", "s_expression", "s_process", "judge_count"]
-        else:
-            rows = quiz_ranking(conn, group)
-            fields = ["rank", "student_id", "entry_no", "name", "school", "grade",
-                      "score", "duration_seconds", "answered", "suspicious_events",
-                      "agent_score", "merged"]
+        rows = quiz_ranking(conn, group)
+        fields = ["rank", "student_id", "entry_no", "name", "school", "grade",
+                  "score", "duration_seconds", "answered", "suspicious_events",
+                  "agent_score", "merged"]
         submitted = conn.execute(
-            "SELECT COUNT(*) AS n FROM students WHERE group_code=? AND status='submitted' AND disqualified=0",
-            (group,),
+            "SELECT COUNT(*) AS n FROM attempts WHERE group_code=? AND status='submitted'", (group,)
         ).fetchone()["n"]
-        if group != "low":
-            submitted = conn.execute(
-                "SELECT COUNT(*) AS n FROM attempts WHERE group_code=? AND status='submitted'", (group,)
-            ).fetchone()["n"]
         quota = (get_setting(conn, "quota") or {}).get(group, 0)
         # OJ 实操考试得分与合并总分（两部分按权重折算，合并后重新排名）
         exam_cfg = get_setting(conn, "agent_exam") or {}
@@ -500,21 +479,13 @@ def ranking_export(request: Request, group: str):
     data = ranking(request, group)
     buf = io.StringIO()
     writer = csv.writer(buf)
-    if group == "low":
-        writer.writerow(["名次", "参赛编号", "姓名", "学校", "作品名称", "总分",
-                         "主题契合", "创意构思", "设计表达", "创作过程", "评委数", "晋级"])
-        for r in data["items"]:
-            writer.writerow([r["rank"], r["entry_no"], r["name"], r["school"], r["work_title"],
-                             r["total"], r["s_theme"], r["s_creative"], r["s_expression"],
-                             r["s_process"], r["judge_count"], "是" if r["promoted"] else ""])
-    else:
-        writer.writerow(["名次", "参赛编号", "姓名", "学校", "年级", "知识测试得分", "实操得分",
-                         "合并总分", "用时(秒)", "答题数", "晋级"])
-        for r in data["items"]:
-            writer.writerow([r["rank"], r["entry_no"], r["name"], r["school"], r["grade"],
-                             r["score"], r["agent_score"] if r["agent_score"] is not None else "",
-                             r["merged"] if r["merged"] is not None else "",
-                             r["duration_seconds"], r["answered"], "是" if r["promoted"] else ""])
+    writer.writerow(["名次", "参赛编号", "姓名", "学校", "年级", "知识测试得分", "实操得分",
+                     "合并总分", "用时(秒)", "答题数", "晋级"])
+    for r in data["items"]:
+        writer.writerow([r["rank"], r["entry_no"], r["name"], r["school"], r["grade"],
+                         r["score"], r["agent_score"] if r["agent_score"] is not None else "",
+                         r["merged"] if r["merged"] is not None else "",
+                         r["duration_seconds"], r["answered"], "是" if r["promoted"] else ""])
     buf.seek(0)
     from urllib.parse import quote
     filename = quote(f"成绩排名_{data['group_name']}.csv")
@@ -522,63 +493,6 @@ def ranking_export(request: Request, group: str):
         content="\ufeff" + buf.getvalue(), media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"},
     )
-
-
-# ---------- 评委账号 ----------
-
-@router.get("/judges")
-def judges_list(request: Request):
-    admin_dep(request)
-    with get_db() as conn:
-        rows = conn.execute(
-            """SELECT u.id, u.username, u.created_at, u.last_login_at,
-                      (SELECT COUNT(*) FROM scores sc WHERE sc.judge_id=u.id) AS scored
-               FROM users u WHERE u.role='judge' ORDER BY u.id"""
-        ).fetchall()
-    return {"items": [dict(r) for r in rows]}
-
-
-class JudgeCreate(BaseModel):
-    username: str
-    password: str = ""
-
-
-@router.post("/judges", dependencies=[Depends(csrf_check)])
-def create_judge(body: JudgeCreate, request: Request):
-    admin_dep(request)
-    username = body.username.strip()
-    if not username or len(username) < 2:
-        raise HTTPException(400, "评委账号名至少 2 位")
-    with get_db() as conn:
-        if conn.execute("SELECT 1 FROM users WHERE username=?", (username,)).fetchone():
-            raise HTTPException(400, "账号已存在")
-        pwd = body.password.strip() or gen_password(8)
-        conn.execute(
-            "INSERT INTO users(username,password_hash,role,must_change_pwd) VALUES(?,?,?,1)",
-            (username, hash_password(pwd), "judge"),
-        )
-    return {"ok": True, "initial_password": pwd}
-
-
-@router.post("/judges/{judge_id}/reset-password", dependencies=[Depends(csrf_check)])
-def reset_judge_pwd(judge_id: int, request: Request):
-    admin_dep(request)
-    with get_db() as conn:
-        row = conn.execute("SELECT id FROM users WHERE id=? AND role='judge'", (judge_id,)).fetchone()
-        if not row:
-            raise HTTPException(404, "评委不存在")
-        pwd = gen_password(8)
-        conn.execute("UPDATE users SET password_hash=?, must_change_pwd=1 WHERE id=?",
-                     (hash_password(pwd), judge_id))
-    return {"ok": True, "new_password": pwd}
-
-
-@router.delete("/judges/{judge_id}", dependencies=[Depends(csrf_check)])
-def delete_judge(judge_id: int, request: Request):
-    admin_dep(request)
-    with get_db() as conn:
-        conn.execute("DELETE FROM users WHERE id=? AND role='judge'", (judge_id,))
-    return {"ok": True}
 
 
 # ---------- 公告 ----------

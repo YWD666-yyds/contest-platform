@@ -89,109 +89,6 @@ HIGH = [
       ["A"], "框架表示法", 2),
 ]
 
-# ============ 中学组样题（高段内容 + 谓词逻辑 / 语义网络 / 正向逆向 / 冲突消解 / 搜索策略） ============
-MIDDLE = [
-    q("middle", "judge", "谓词逻辑中，谓词刻画个体的性质或关系，取值为真或假。",
-      JUDGE_OPTS, ["A"], "谓词逻辑", 1),
-    q("middle", "single", "「所有学生都应遵守规则」的谓词公式是：",
-      [{"key": "A", "text": "∀x(Student(x) → ShouldObeyRules(x))"},
-       {"key": "B", "text": "∃x(Student(x) ∧ ShouldObeyRules(x))"},
-       {"key": "C", "text": "ShouldObeyRules(Student)"},
-       {"key": "D", "text": "∀x(Student(x) ∧ ShouldObeyRules(x))"}],
-      ["A"], "谓词逻辑", 2),
-    q("middle", "single", "「小蕊乘地铁去学校」用谓词 Take(XiaoRui, Subway, School) 表示，这是一个：",
-      [{"key": "A", "text": "一元谓词"}, {"key": "B", "text": "二元谓词"},
-       {"key": "C", "text": "三元谓词"}, {"key": "D", "text": "语义网络"}],
-      ["C"], "谓词逻辑", 2),
-    q("middle", "single", "谓词逻辑符号中，∃ 表示：",
-      [{"key": "A", "text": "全称量词（所有）"}, {"key": "B", "text": "存在量词（有一个）"},
-       {"key": "C", "text": "否定"}, {"key": "D", "text": "并且"}],
-      ["B"], "谓词逻辑", 2),
-    q("middle", "single", "已知推理规则 ∀x(HUMAN(x) → THINK(x))，再已知事实 HUMAN(小明)，可以推出：",
-      [{"key": "A", "text": "THINK(小明)"}, {"key": "B", "text": "HUMAN(所有学生)"},
-       {"key": "C", "text": "¬THINK(小明)"}, {"key": "D", "text": "无法推出任何结论"}],
-      ["A"], "谓词逻辑", 2),
-    q("middle", "judge", "语义网络中，ISA 弧表示「实例→类」的关系，如「咪咪 ISA 猫」，弧由个体指向类。",
-      JUDGE_OPTS, ["A"], "语义网络", 1),
-    q("middle", "single", "语义网络中，「猫 AKO 哺乳动物」表示的是：",
-      [{"key": "A", "text": "猫是哺乳动物的一个实例"},
-       {"key": "B", "text": "猫类属于哺乳动物这个父类（类属关系）"},
-       {"key": "C", "text": "猫拥有哺乳动物"},
-       {"key": "D", "text": "哺乳动物是猫的一部分"}],
-      ["B"], "语义网络", 2),
-    q("middle", "single", "在语义网络中沿 AKO 弧向上走，可以：",
-      [{"key": "A", "text": "继承父类的属性，如「猫 AKO 哺乳动物」，猫继承「哺乳」等属性"},
-       {"key": "B", "text": "删除所有节点"},
-       {"key": "C", "text": "把类变成个体"},
-       {"key": "D", "text": "提高网络传输速度"}],
-      ["A"], "语义网络", 2),
-    q("middle", "multiple", "下列属于知识表示方法的有：",
-      [{"key": "A", "text": "框架表示法"}, {"key": "B", "text": "产生式表示法"},
-       {"key": "C", "text": "谓词逻辑表示法"}, {"key": "D", "text": "语义网络表示法"}],
-      ["A", "B", "C", "D"], "知识表示概念", 3),
-    q("middle", "single", "正向推理的特点是：",
-      [{"key": "A", "text": "从已知事实出发，用规则不断推出新事实并加入事实库（数据驱动）"},
-       {"key": "B", "text": "先假设结论成立，再寻找支持这个结论的证据（目标驱动）"},
-       {"key": "C", "text": "随机挑选规则执行"},
-       {"key": "D", "text": "只执行最后一条规则"}],
-      ["A"], "正向与逆向推理", 2),
-    q("middle", "single", "医生先假设病人「可能患普通感冒」，再逐项核对症状、体温等证据来验证，这种推理方式更接近：",
-      [{"key": "A", "text": "正向推理"}, {"key": "B", "text": "逆向推理"},
-       {"key": "C", "text": "宽度优先搜索"}, {"key": "D", "text": "归纳推理"}],
-      ["B"], "正向与逆向推理", 2),
-    q("middle", "single", "正向推理中，多条规则的条件同时满足时，需要决定先执行哪条，这一过程称为：",
-      [{"key": "A", "text": "冲突消解"}, {"key": "B", "text": "知识表示"},
-       {"key": "C", "text": "框架填槽"}, {"key": "D", "text": "语义解析"}],
-      ["A"], "冲突消解", 2),
-    q("middle", "single", "下列哪一项不是常用的冲突消解策略？",
-      [{"key": "A", "text": "优先执行条件更特殊（限定更多）的规则"},
-       {"key": "B", "text": "优先执行最近刚执行过的规则（新鲜度优先）"},
-       {"key": "C", "text": "按规则编号顺序执行"},
-       {"key": "D", "text": "所有命中规则都不执行，直接结束"}],
-      ["D"], "冲突消解", 2),
-    q("middle", "judge", "深度优先搜索（DFS）是一条路走到黑、走不通再回溯；宽度优先搜索（BFS）是先看完本层所有节点再进入下一层。",
-      JUDGE_OPTS, ["A"], "搜索策略", 1),
-    q("middle", "single", "搜索树：根节点 S，S 的子节点为 A、B；A 的子节点为 C、D。用宽度优先搜索（BFS）从 S 出发，访问顺序是：",
-      [{"key": "A", "text": "S → A → C → D → B"},
-       {"key": "B", "text": "S → A → B → C → D"},
-       {"key": "C", "text": "S → B → A → D → C"},
-       {"key": "D", "text": "S → C → D → A → B"}],
-      ["B"], "搜索策略", 2),
-    q("middle", "single", "用深度优先搜索（DFS）遍历上面的同一棵树（子节点按从左到右访问），访问顺序是：",
-      [{"key": "A", "text": "S → A → C → D → B"},
-       {"key": "B", "text": "S → A → B → C → D"},
-       {"key": "C", "text": "S → B → A → C → D"},
-       {"key": "D", "text": "S → B → D → C → A"}],
-      ["A"], "搜索策略", 2),
-    q("middle", "multiple", "下列属于盲目搜索（无启发式信息）的有：",
-      [{"key": "A", "text": "深度优先搜索"}, {"key": "B", "text": "宽度优先搜索"},
-       {"key": "C", "text": "依据提示屏指示灯优先查找的启发式搜索"}, {"key": "D", "text": "依赖启发式信息的A*搜索"}],
-      ["A", "B"], "搜索策略", 3),
-    q("middle", "single", "规则库：R1：IF 有毛发 THEN 哺乳动物；R5：IF 哺乳动物 AND 吃肉 THEN 食肉动物；R6：IF 食肉动物 AND 黄褐色 AND 有暗斑点 THEN 猎豹。初始事实：有毛发、吃肉、黄褐色、有暗斑点。正向推理得出「猎豹」的过程中，三条规则的触发顺序是：",
-      [{"key": "A", "text": "R6 → R5 → R1"}, {"key": "B", "text": "R1 → R5 → R6"},
-       {"key": "C", "text": "R5 → R1 → R6"}, {"key": "D", "text": "R1 → R6 → R5"}],
-      ["B"], "产生式推理", 2),
-    q("middle", "single", "产生式表示法中，「IF 环境亮度=较暗 THEN 自动调高灯光亮度」，与该规则对应呈现相反情形的合理规则是：",
-      [{"key": "A", "text": "IF 环境亮度=较亮 THEN 自动调低灯光亮度"},
-       {"key": "B", "text": "IF 自动调高灯光 THEN 环境亮度=较暗"},
-       {"key": "C", "text": "IF 环境亮度=较暗 THEN 关闭电源"},
-       {"key": "D", "text": "THEN 环境亮度=较暗 IF 自动调高灯光亮度"}],
-      ["A"], "产生式表示法", 2),
-    q("middle", "judge", "知识表示与知识推理是知识工程的两块基石：表示让机器「读懂」知识，推理让机器「学会思考」。",
-      JUDGE_OPTS, ["A"], "知识工程概念", 1),
-    q("middle", "single", "处理人工智能伦理情景题的「三步答题法」中，第二步「判类型」是要判断问题属于：",
-      [{"key": "A", "text": "偏见（不客观）还是隐私（过度收集、未授权）"},
-       {"key": "B", "text": "物理问题还是化学问题"},
-       {"key": "C", "text": "数学问题还是语文问题"},
-       {"key": "D", "text": "硬件问题还是软件问题"}],
-      ["A"], "人工智能伦理", 2),
-    q("middle", "single", "把「Lucy 和 Lily 是姐妹」表示为谓词公式，正确的形式是：",
-      [{"key": "A", "text": "Sister(Lucy, Lily)"}, {"key": "B", "text": "Lucy(Sister, Lily)"},
-       {"key": "C", "text": "∀x Sister(x)"}, {"key": "D", "text": "Sister ∧ Lucy ∧ Lily"}],
-      ["A"], "谓词逻辑", 2),
-]
-
-
 def run():
     init_db()
     with get_db() as conn:
@@ -204,20 +101,20 @@ def run():
             print(f"已创建管理员：admin / {config.ADMIN_INITIAL_PASSWORD}")
         # 样题
         if not conn.execute("SELECT 1 FROM questions LIMIT 1").fetchone():
-            for item in HIGH + MIDDLE:
+            for item in HIGH:
                 conn.execute(
                     "INSERT INTO questions(group_code,type,stem,options,answer,score,topic) "
                     "VALUES(:group_code,:type,:stem,:options,:answer,:score,:topic)",
                     item,
                 )
-            print(f"已导入样题：高段组 {len(HIGH)} 题、中学组 {len(MIDDLE)} 题")
+            print(f"已导入样题：小学高段组 {len(HIGH)} 题")
         # 欢迎公告
         if not conn.execute("SELECT 1 FROM announcements LIMIT 1").fetchone():
             conn.execute(
                 "INSERT INTO announcements(title,body,pinned) VALUES(?,?,1)",
                 ("欢迎使用本市级初赛平台",
-                 "请先阅读「比赛规则」栏目，小学低段组选手在「我的工作台」提交作品材料，"
-                 "小学高段组与中学组选手按考试安排参加线上作答。祝各位选手取得优异成绩！"),
+                 "请先阅读「比赛规则」栏目，小学高段组选手按本站考试安排参加线上作答，"
+                 "并在「设计智能体」中完成实操任务。祝各位选手取得优异成绩！"),
             )
     print("初始化完成。")
 

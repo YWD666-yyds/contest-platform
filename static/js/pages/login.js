@@ -1,7 +1,7 @@
 /** 登录页：参赛编号/账号 + 密码，首登强制改密。 */
-import { api } from "../api.js?v=12";
-import { h, $, toastOk, toastErr } from "../ui.js?v=12";
-import { state, refreshMe, setNav } from "../app.js?v=12";
+import { api } from "../api.js?v=13";
+import { h, $, toastOk, toastErr } from "../ui.js?v=13";
+import { state, refreshMe, setNav } from "../app.js?v=13";
 
 export async function render(app) {
   setNav("");

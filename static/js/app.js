@@ -1,15 +1,15 @@
 /** 应用入口：会话状态 + hash 路由 + 导航渲染。 */
-import { api } from "./api.js?v=12";
-import { h, $, toastErr } from "./ui.js?v=12";
-import * as home from "./pages/home.js?v=12";
-import * as rules from "./pages/rules.js?v=12";
-import * as scores from "./pages/scores.js?v=12";
-import * as login from "./pages/login.js?v=12";
-import * as student from "./pages/student.js?v=12";
-import * as agentPage from "./pages/agent.js?v=12";
-import * as exam from "./pages/exam.js?v=12";
-import * as judge from "./pages/judge.js?v=12";
-import * as admin from "./pages/admin.js?v=12";
+import { api } from "./api.js?v=13";
+import { h, $, toastErr } from "./ui.js?v=13";
+import * as home from "./pages/home.js?v=13";
+import * as rules from "./pages/rules.js?v=13";
+import * as scores from "./pages/scores.js?v=13";
+import * as login from "./pages/login.js?v=13";
+import * as student from "./pages/student.js?v=13";
+import * as agentPage from "./pages/agent.js?v=13";
+import * as exam from "./pages/exam.js?v=13";
+import * as judge from "./pages/judge.js?v=13";
+import * as admin from "./pages/admin.js?v=13";
 
 export const state = {
   user: null,       // {id, username, role, must_change_pwd}

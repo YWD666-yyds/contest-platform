@@ -1,7 +1,7 @@
 /** 管理后台：概览 / 学生 / 题库 / 赛事设置 / 成绩公示 / 评委 / 公告 / 日志。 */
-import { api, download } from "../api.js?v=12";
-import { h, $, $$, toastOk, toastErr, modal, confirmBox, badge, fmtTime, fmtDur, empty, copyText, dropdown } from "../ui.js?v=12";
-import { setNav, GROUP_NAMES } from "../app.js?v=12";
+import { api, download } from "../api.js?v=13";
+import { h, $, $$, toastOk, toastErr, modal, confirmBox, badge, fmtTime, fmtDur, empty, copyText, dropdown } from "../ui.js?v=13";
+import { setNav, GROUP_NAMES } from "../app.js?v=13";
 
 let currentTab = "overview";
 
@@ -145,7 +145,6 @@ async function tabStudents(el) {
         h("td", {}, statusCell(r)),
         h("td", { class: "nowrap" }, scoreCell(r)),
         h("td", {}, h("div", { class: "row", style: "gap:5px" },
-          h("button", { class: "btn btn-ghost btn-sm", onclick: () => viewStudent(r.id) }, "查看"),
           h("button", { class: "btn btn-ghost btn-sm", onclick: () => editStudent(r, load) }, "编辑"),
           h("button", { class: "btn btn-ghost btn-sm", onclick: () => resetPwd(r) }, "重置密码"),
           h("button", { class: "btn btn-ghost btn-sm", style: "color:var(--danger)", onclick: () => {
@@ -163,42 +162,17 @@ async function tabStudents(el) {
   }
 
   function statusCell(r) {
-    if (r.group_code === "low") {
-      return h("div", { class: "row", style: "gap:4px" },
-        badge(r.status === "submitted" ? "已提交" : "未提交", r.status === "submitted" ? "ok" : "off"),
-        r.group_code === "low" && h("span", { class: "small muted" }, `评${r.judge_count}人`));
-    }
     return badge(
       r.attempt_status === "submitted" ? "已交卷" : r.attempt_status === "running" ? "作答中" : "未开考",
       r.attempt_status === "submitted" ? "ok" : r.attempt_status === "running" ? "warn" : "off");
   }
   function scoreCell(r) {
-    if (r.group_code === "low") return h("span", { class: "muted" }, `${r.judge_count} 位评委`);
     return r.exam_score != null
       ? h("span", { class: "num" }, `${r.exam_score} 分 · ${fmtDur(r.duration_seconds)}`)
       : h("span", { class: "muted" }, "—");
   }
 
   await load();
-
-  function viewStudent(id) {
-    api.get(`/api/admin/submission/${id}`).then((d) => {
-      const st = d.student;
-      modal({
-        title: `#${st.entry_no} 材料`,
-        wide: true,
-        body: h("div", {},
-          h("div", { class: "kv" },
-            h("div", { class: "k" }, "作品名称"), h("div", {}, st.work_title || "—"),
-            h("div", { class: "k" }, "AI 平台"), h("div", {}, st.ai_platform || "—"),
-            h("div", { class: "k" }, "作品说明"), h("div", { style: "white-space:pre-wrap" }, st.description || "—")),
-          st.design_image && h("img", { src: st.design_image, style: "border-radius:10px;margin-top:12px" }),
-          h("div", { class: "preview-grid mt16" },
-            ...st.process_images.map((p) => h("div", { class: "preview" }, h("img", { src: p }))))),
-        actions: (close) => [h("button", { class: "btn", onclick: close }, "关闭")],
-      });
-    });
-  }
 
   function editStudent(r, done) {
     const name = h("input", { class: "input", value: r.name });
@@ -674,30 +648,23 @@ async function tabScores(el) {
     listBox.append(h("div", { class: "row mb16" },
       badge(`已参评 ${data.items.length} / 已提交 ${data.submitted}`, "info"),
       h("span", { class: "small muted" }, `晋级名额：${data.quota || "未设置（在赛事设置中配置）"}`)));
-    if (!data.items.length) { listBox.append(empty(group === "low" ? "尚无完成评审的作品" : "尚无已交卷的选手")); return; }
-    const isLow = group === "low";
+    if (!data.items.length) { listBox.append(empty("尚无已交卷的选手")); return; }
     listBox.append(h("div", { class: "tablewrap" }, h("table", { class: "tbl" },
       h("thead", {}, h("tr", {},
-        ...["名次", "参赛编号", "姓名", "学校",
-            ...(isLow ? ["作品名称", "主题契合", "创意构思", "设计表达", "创作过程", "总分"]
-            : ["年级", "知识测试得分", "用时", "答题数", "切屏", "实操得分", "合并总分"]),
-            "晋级"].map((c) => h("th", {}, c)))),
+        ..."名次 参赛编号 姓名 学校 年级 知识测试得分 用时 答题数 切屏 实操得分 合并总分 晋级".split(" ").map((c) => h("th", {}, c)))),
       h("tbody", {}, ...data.items.map((r) => h("tr", {},
         h("td", { class: `num ${r.rank <= 3 ? "rank-top" : ""}` }, String(r.rank)),
         h("td", { class: "nowrap" }, r.entry_no),
         h("td", { class: "nowrap" }, r.name),
         h("td", {}, r.school),
-        ...(isLow
-          ? [h("td", {}, r.work_title || "—"),
-             ...["s_theme", "s_creative", "s_expression", "s_process"].map((k) => h("td", { class: "num" }, String(r[k] ?? "—"))),
-             h("td", { class: "num rank-top" }, String(r.total))]
-          : [h("td", { class: "nowrap" }, r.grade || "—"),
-             h("td", { class: "num" }, String(r.score)),
-             h("td", { class: "num" }, fmtDur(r.duration_seconds)),
-             h("td", { class: "num" }, String(r.answered ?? "—")),
-             h("td", { class: "num" }, r.suspicious_events ? h("span", { class: "badge badge-warn" }, String(r.suspicious_events)) : "0"),
-             h("td", { class: "num" }, r.agent_score != null ? String(r.agent_score) : "—"),
-             h("td", { class: "num rank-top" }, r.merged != null ? String(r.merged) : "—")]),
+        h("td", { class: "nowrap" }, r.grade || "—"),
+        h("td", { class: "num" }, String(r.score)),
+        h("td", { class: "num" }, fmtDur(r.duration_seconds)),
+        h("td", { class: "num" }, String(r.answered ?? "—")),
+        h("td", { class: "num" }, r.suspicious_events ? h("span", { class: "badge badge-warn" }, String(r.suspicious_events)) : "0"),
+        h("td", { class: "num" }, r.agent_score != null ? String(r.agent_score) : "—"),
+        h("td", { class: "num rank-top" }, r.merged != null ? String(r.merged) : "—"),
+        h("td", {}, r.promoted ? badge("晋级", "ok") : "")))),
         h("td", {}, r.promoted ? badge("晋级", "ok") : "")))))));
   }
 
@@ -715,54 +682,6 @@ async function tabJudges(el) {
   ));
 }
 
-async function _tabJudgesLegacy(el) {
-  const data = await api.get("/api/admin/judges");
-  el.append(h("div", { class: "spread mb16" },
-    h("h2", { style: "margin:0" }, "评委管理"),
-    h("button", { class: "btn btn-sm", onclick: showCreate }, "＋ 新增评委")));
-  if (!data.items.length) { el.append(empty("暂无评委账号")); return; }
-  el.append(h("div", { class: "tablewrap" }, h("table", { class: "tbl" },
-    h("thead", {}, h("tr", {}, ..."账号 已评审 最近登录 操作".split(" ").map((c) => h("th", {}, c)))),
-    h("tbody", {}, ...data.items.map((r) => h("tr", {},
-      h("td", { class: "nowrap" }, r.username),
-      h("td", { class: "num" }, String(r.scored)),
-      h("td", {}, fmtTime(r.last_login_at)),
-      h("td", { class: "nowrap" },
-        h("button", { class: "btn btn-ghost btn-sm", onclick: async () => {
-          confirmBox(`重置评委 ${r.username} 的密码？`, async () => {
-            const res = await api.post(`/api/admin/judges/${r.id}/reset-password`);
-            showPasswordModal("评委新密码（仅显示一次）", r.username, res.new_password);
-          });
-        } }, "重置密码"),
-        h("button", { class: "btn btn-ghost btn-sm", style: "color:var(--danger)", onclick: () => {
-          confirmBox(`删除评委 ${r.username}？其已提交的评分将保留。`, async () => {
-            await api.del(`/api/admin/judges/${r.id}`); toastOk("已删除"); loadTab($("#app").lastElementChild);
-          }, { danger: true, yes: "删除" });
-        } }, "删除"))))))));
-
-  function showCreate() {
-    const username = h("input", { class: "input", placeholder: "评委账号名（如 judge01）" });
-    const pwd = h("input", { class: "input", placeholder: "初始密码（留空自动生成）" });
-    modal({
-      title: "新增评委",
-      body: h("div", {},
-        h("div", { class: "field" }, h("label", { class: "req" }, "账号名"), username),
-        h("div", { class: "field" }, h("label", {}, "初始密码"), pwd)),
-      actions: (close) => [
-        h("button", { class: "btn btn-ghost", onclick: close }, "取消"),
-        h("button", { class: "btn", onclick: async () => {
-          try {
-            const r = await api.post("/api/admin/judges", { username: username.value.trim(), password: pwd.value });
-            close();
-            showPasswordModal("评委创建成功（初始密码仅显示一次）", username.value.trim(), r.initial_password);
-          } catch (e) { toastErr(e.message); }
-        } }, "创建"),
-      ],
-    });
-  }
-}
-
-/* ================= 公告管理 ================= */
 async function tabAnnouncements(el) {
   const data = await api.get("/api/admin/announcements");
   el.append(h("div", { class: "spread mb16" },

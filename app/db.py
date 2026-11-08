@@ -89,22 +89,6 @@ CREATE TABLE IF NOT EXISTS attempts (
 );
 CREATE INDEX IF NOT EXISTS idx_attempts_group ON attempts(group_code, status);
 
-CREATE TABLE IF NOT EXISTS scores (
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    student_id   INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
-    judge_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    s_theme      REAL NOT NULL,
-    s_creative   REAL NOT NULL,
-    s_expression REAL NOT NULL,
-    s_process    REAL NOT NULL,
-    total        REAL NOT NULL,
-    comment      TEXT NOT NULL DEFAULT '',
-    created_at   TEXT NOT NULL DEFAULT (datetime('now','localtime')),
-    updated_at   TEXT,
-    UNIQUE(student_id, judge_id)
-);
-CREATE INDEX IF NOT EXISTS idx_scores_student ON scores(student_id);
-
 CREATE TABLE IF NOT EXISTS announcements (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     title      TEXT NOT NULL,

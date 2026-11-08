@@ -1,7 +1,7 @@
 /** 设计智能体：题目要求 → 引导式设计 → 对话测试与提交任务。 */
-import { api } from "../api.js?v=12";
-import { h, $, toastOk, toastErr, badge, modal, confirmBox } from "../ui.js?v=12";
-import { setNav, rerender } from "../app.js?v=12";
+import { api } from "../api.js?v=13";
+import { h, $, toastOk, toastErr, badge, modal, confirmBox } from "../ui.js?v=13";
+import { setNav, rerender } from "../app.js?v=13";
 
 let step = 1;
 let agent = null;

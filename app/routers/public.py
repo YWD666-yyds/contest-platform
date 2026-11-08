@@ -29,11 +29,9 @@ def home():
                 "SELECT COUNT(*) AS n, SUM(CASE WHEN status='submitted' THEN 1 ELSE 0 END) AS s "
                 "FROM students WHERE group_code=?", (g,)
             ).fetchone()
-            submitted_cnt = row["s"] or 0
-            if g != "low":
-                submitted_cnt = conn.execute(
-                    "SELECT COUNT(*) AS n FROM attempts WHERE group_code=? AND status='submitted'", (g,)
-                ).fetchone()["n"] or 0
+            submitted_cnt = conn.execute(
+                "SELECT COUNT(*) AS n FROM attempts WHERE group_code=? AND status='submitted'", (g,)
+            ).fetchone()["n"] or 0
             stats[g] = {"total": row["n"] or 0, "submitted": submitted_cnt}
         ann = [dict(r) for r in conn.execute(
             "SELECT id,title,body,pinned,created_at FROM announcements ORDER BY pinned DESC, id DESC LIMIT 10"
@@ -81,13 +79,8 @@ def public_scores(group: str, entry_no: str = ""):
         publish = get_setting(conn, "publish")
         if not publish.get(group):
             raise HTTPException(403, "该组别成绩尚未公布")
-        if group == "low":
-            rows = grading.low_group_ranking(conn)
-            fields = ["rank", "entry_no", "name", "school", "work_title", "total",
-                      "s_theme", "s_creative", "s_expression", "s_process", "judge_count"]
-        else:
-            rows = grading.quiz_ranking(conn, group)
-            fields = ["rank", "entry_no", "name", "school", "grade", "score", "duration_seconds"]
+        rows = grading.quiz_ranking(conn, group)
+        fields = ["rank", "entry_no", "name", "school", "grade", "score", "duration_seconds"]
         if publish.get("mask_names", True):
             for r in rows:
                 r["name"] = _mask_name(r["name"])

@@ -1,7 +1,7 @@
 /** 考试页：服务端计时、自动保存、倒计时、到时自动收卷、切屏记录。 */
-import { api } from "../api.js?v=12";
-import { h, $, $$, toastOk, toastErr, modal, fmtDur } from "../ui.js?v=12";
-import { setNav } from "../app.js?v=12";
+import { api } from "../api.js?v=13";
+import { h, $, $$, toastOk, toastErr, modal, fmtDur } from "../ui.js?v=13";
+import { setNav } from "../app.js?v=13";
 
 let st = null;          // 考试状态
 let answers = {};       // {qid: [keys]}

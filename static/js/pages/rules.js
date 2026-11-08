@@ -1,6 +1,6 @@
 /** 比赛规则页：面向参赛者的规则要点（依据官方竞赛规则整理）。 */
-import { setNav } from "../app.js?v=12";
-import { h } from "../ui.js?v=12";
+import { setNav } from "../app.js?v=13";
+import { h } from "../ui.js?v=13";
 
 export async function render(app) {
   setNav("比赛规则");
