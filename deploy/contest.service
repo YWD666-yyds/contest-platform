@@ -1,0 +1,44 @@
+# systemd 服务单元 —— 人工智能应用赛项 · 市级初赛平台
+# 安装：sudo cp deploy/contest.service /etc/systemd/system/
+#       sudo systemctl daemon-reload && sudo systemctl enable --now contest
+
+[Unit]
+Description=Contest Platform (AI Challenge - City Preliminary)
+After=network.target
+
+[Service]
+Type=exec
+User=contest
+Group=contest
+WorkingDirectory=/opt/contest
+Environment="PATH=/opt/contest/venv/bin:/usr/bin:/bin"
+# 如需 HTTPS，请另设 COOKIE_SECURE=1
+Environment="COOKIE_SECURE=0"
+ExecStart=/opt/contest/venv/bin/uvicorn app.main:app \
+    --host 127.0.0.1 --port 8000 \
+    --workers 4 \
+    --proxy-headers --forwarded-allow-ips=127.0.0.1 \
+    --backlog 2048 \
+    --timeout-keep-alive 30
+Restart=always
+RestartSec=3
+
+# 资源与安全加固
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/contest/data
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+MemoryMax=1G
+TasksMax=512
+
+# 日志交给 journald（logrotate 由 systemd 管理）
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=contest
+
+[Install]
+WantedBy=multi-user.target
