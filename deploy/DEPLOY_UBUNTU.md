@@ -34,8 +34,6 @@ sudo bash deploy/deploy.sh            # 默认安装到 /opt/contest
 ├── static/             # 前端（Nginx 直接服务）
 ├── data/
 │   ├── contest.db      # SQLite 数据库（WAL 模式）
-│   ├── uploads/        # 学生上传原图（UUID 文件名）
-│   ├── thumbs/         # 评审缩略图
 │   └── backups/        # 自动备份
 ├── deploy/             # 部署脚本与配置
 └── venv/               # Python 虚拟环境
@@ -72,10 +70,9 @@ certbot 会自动续期并重载 Nginx。
 
 ## 六、性能与容量说明（已内置的优化）
 
-- **Nginx**：前端与上传图片直接由 Nginx 服务（7 天缓存），gzip 压缩，`client_max_body_size 25m`，登录接口 10 次/分钟限速、API 30 r/s 限速
+- **Nginx**：前端静态资源直接由 Nginx 服务（7 天缓存），gzip 压缩，`client_max_body_size 10m`（CSV 名单导入余量），登录接口 10 次/分钟限速、API 30 r/s 限速
 - **Uvicorn**：4 worker（可按 `nproc` 核数调整 `contest.service` 中 `--workers`）
 - **SQLite**：WAL 模式 + `busy_timeout`，读写并发良好；关键词查询均已建索引
-- **缩略图**：上传时生成 480px 缩略图，评审列表不再加载 20MB 原图
 - **systemd 加固**：`ProtectSystem=strict`、`MemoryMax=1G`、崩溃 3 秒自动拉起
 
 **容量参考**：2 核 2G 服务器可轻松支撑「上千人报名 + 数百人同时在线答题」（答题请求为纯内存/SQLite 毫秒级操作）。若单场考试同屏超过 1000 人，可将 worker 数调为 CPU 核数 × 2。
@@ -88,11 +85,13 @@ certbot 会自动续期并重载 Nginx。
 
 ## 八、赛前检查清单
 
-- [ ] 「赛事设置」：填写提交截止时间、各组考试窗口与时长
+- [ ] 「赛事设置」：填写考试窗口与时长（知识测试）、实操考试窗口与两部分成绩权重、公示开关与晋级名额
+- [ ] 「🤖 智能体设置」：配置 LLM（接口地址/API Key/模型）并点「测试连接」；编辑「题目要求」正文
+- [ ] 「🧪 实操考试」：导入/核对智能体考题与标准测试问题
 - [ ] 「题库管理」：核对/替换内置样题（正式赛题赛前导入）
 - [ ] 「学生管理」：批量导入名单（CSV 模板见平台），下载账号单分发给学校
 - [ ] 首页通知公告、赛程安排是否更新
-- [ ] 用一个测试学生账号完整走一遍：登录 → 提交/答题 → 交卷
+- [ ] 用一个测试学生账号完整走一遍：登录 → 答题交卷 → 设计智能体 → 对话测试 → 交任务
 - [ ] 考试前 30 分钟 `systemctl status contest` 确认服务健康，`df -h` 确认磁盘余量
 
 ## 九、常见问题
@@ -100,7 +99,7 @@ certbot 会自动续期并重载 Nginx。
 | 现象 | 处理 |
 |------|------|
 | 502 Bad Gateway | `systemctl status contest` 看后端是否崩溃；`journalctl -u contest -n 50` 找原因 |
-| 上传图片报 413 | Nginx `client_max_body_size`（本配置 25m）与代码内 20MB 限制，检查是否有其他 server 块覆盖 |
+| 导入 CSV 报 413 | Nginx `client_max_body_size`（本配置 10m），检查是否有其他 server 块覆盖 |
 | 登录提示“失败次数过多” | 15 分钟后自动解锁；管理员可让学生用“重置密码” |
 | 考试中倒计时与手表有偏差 | 以服务端时间为准，请校准服务器时区：`sudo timedatectl set-timezone Asia/Shanghai` |
 | 想换端口 | 改 `contest.service` 的 `--port` 与 nginx conf 的 `proxy_pass`，重启两者 |

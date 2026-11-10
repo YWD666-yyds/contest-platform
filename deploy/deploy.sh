@@ -23,7 +23,7 @@ rsync -a --delete \
     --exclude 'data/' --exclude '.git/' --exclude '__pycache__/' \
     --exclude 'tests/' --exclude '.pytest_cache/' \
     "$SRC_DIR"/ "$APP_DIR"/
-mkdir -p "$APP_DIR"/data/{uploads,thumbs,backups}
+mkdir -p "$APP_DIR"/data/backups
 chown -R "$SERVICE_USER":"$SERVICE_USER" "$APP_DIR"
 
 echo "==> 3/8 创建 Python 虚拟环境并安装依赖"
